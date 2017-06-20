@@ -1,0 +1,38 @@
+main {
+    height: 100%;
+    position: relative;
+}
+
+main > header {
+    height: 60px;
+    background: #333;
+}
+
+main > header > h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    font-weight: 300;
+}
+
+.loading {
+    width: 128px;
+    height: 128px;
+    top: calc(50% - 64px);
+    left: calc(50% - 64px);
+    position: absolute;
+}
+
+.Logout {
+    position: fixed;
+    bottom: 1.2rem;
+    right: 1.2rem;
+    color: white;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    border: 0;
+    background: #333;
+}
