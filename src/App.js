@@ -1,14 +1,10 @@
 import React, { Component }        from 'react'
 import Rebase                      from 're-base'
 import firebase                    from 'firebase'
+import _                           from 'lodash'
 
 import Logout                      from     './components/Login/Logout'
 import Welcome                     from     './components/0_Welcome/Welcome'
-import {
-  getNewAnimal,
-  findStoredUserByUid,
-  getUsers,
-} from './utils/utils'
 
 import firebaseConf                from './config/firebase'
 import wheel                       from './assets/img/wheel.svg'
@@ -23,62 +19,37 @@ class App extends Component {
   constructor() {
     super()
     this.state = {
-      currentUser: {},
+      users: {},
       isLoading: true,
     }
   }
 
   componentDidMount() {
-    const _this = this
-    firebase.auth().onAuthStateChanged(function(user) {
+    base.bindToState('users', {
+      context: this,
+      state: 'users',
+    });
+
+    firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        getUsers(base).then(users => {
-          console.log(findStoredUserByUid(user.uid, users))
-          _this.setState({
-            isLoading: false,
-            currentUser: findStoredUserByUid(user.uid, users)
-          })
-        });
+        this.setState({
+          isLoading: false
+        })
       }
       else {
-        _this.anonymousLogin()
+        this.setState({
+          isLoading: true
+        })
+        this.anonymousLogin()
       }
-    });
-  }
-
-  anonymousLogin = () => {
-    const _this = this
-
-    getUsers(base).then(users => {
-
-      firebase.auth().signInAnonymously().then(user => {
-        const newAnimal = getNewAnimal(users)
-
-        const newUser = {
-          name: newAnimal.name,
-          emoji: newAnimal.value,
-          uid: user.uid,
-        }
-
-        base.push('users', {
-          data: newUser,
-          then(err){
-            if(!err){
-              _this.setState({
-                isLoading: false,
-                currentUser: newUser
-              })
-            }
-          }
-        });
-
-      }).catch((error) => alert(error.code));
     })
   }
 
+  anonymousLogin = () => firebase.auth().signInAnonymously().catch((error) => alert(error.code))
+
   render() {
-    const { isLoading, currentUser } = this.state
-    const isLogged = firebase.auth().currentUser
+    const { users, isLoading } = this.state
+    const firebaseSession = firebase.auth().currentUser
 
     return (
       <main>
@@ -88,10 +59,13 @@ class App extends Component {
 
         {isLoading && <img alt="loading" className="loading" src={wheel} />}
 
-        {!isLoading && isLogged && <Logout firebase={firebase} />}
+        {!isLoading && firebaseSession && <Logout firebase={firebase} />}
 
-        {!isLoading && isLogged && currentUser && (
-          <Welcome currentUser={currentUser} />
+        {
+          !isLoading &&
+          firebaseSession &&
+          _.has(users, firebaseSession.uid) && (
+          <Welcome currentUser={_.get(users, firebaseSession.uid, null)} />
         )}
 
       </main>
