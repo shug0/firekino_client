@@ -18,7 +18,8 @@ class App extends Component {
   constructor() {
     super()
     this.state = {
-      users: {}
+      users: {},
+      stats: {}
     }
   }
 
@@ -27,22 +28,29 @@ class App extends Component {
       context: this,
       state: 'users',
     });
+    base.bindToState('stats', {
+      context: this,
+      state: 'stats',
+    });
     firebase.auth().onAuthStateChanged(user => (!user) && this.anonymousLogin())
   }
 
   anonymousLogin = () => firebase.auth().signInAnonymously().catch((error) => alert(error.code))
 
   incrementUserCount = (uid) => {
-    const { users } = this.state
-    this.setState({
-      users : {
-        ...users,
-        [uid]: {
-          ...users[uid],
-          count: (_.get(users[uid], 'count') || 0) + 1
+    const { users, stats } = this.state
+
+    if (_.get(stats, 'lock')) {
+      this.setState({
+        users : {
+          ...users,
+          [uid]: {
+            ...users[uid],
+            count: (_.get(users[uid], 'count') || 0) + 1
+          }
         }
-      }
-    })
+      })
+    }
   }
 
   render() {
