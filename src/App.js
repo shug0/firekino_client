@@ -68,7 +68,7 @@ class App extends Component {
 
         {!currentUser && <img alt="loading" className="loading" src={loading} />}
 
-        {firebaseSession && <Logout firebase={firebase} />}
+        {!currentUser && firebaseSession && <Logout firebase={firebase} />}
 
         {currentUser &&
           <Welcome currentUser={currentUser} incrementUserCount={() => this.incrementUserCount(uid) }/>
