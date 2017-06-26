@@ -20,5 +20,9 @@
 }
 
 .Welcome__emoji {
+  transition: ease all 0.1s;
+}
 
+.Welcome__emoji:hover {
+  transform: scale(1.2);
 }

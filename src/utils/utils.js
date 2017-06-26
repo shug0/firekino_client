@@ -25,6 +25,4 @@ export const getOS = () => {
   return os;
 }
 
-export const getEmojiSize = () => getOS() === 'Android' ? '54px' : '128px'
-
-
+export const getEmojiSize = () => getOS() === 'Android' ? '45px' : '100px'

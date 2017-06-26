@@ -1,55 +1,56 @@
-import React, { Component }        from 'react'
-import Rebase                      from 're-base'
-import firebase                    from 'firebase'
-import _                           from 'lodash'
+import React, { Component }  from 'react'
+import Rebase                from 're-base'
+import firebase              from 'firebase'
+import _                     from 'lodash'
 
-import Logout                      from     './components/Login/Logout'
-import Welcome                     from     './components/0_Welcome/Welcome'
+import Logout                from     './components/Login/Logout'
+import Welcome               from     './components/0_Welcome/Welcome'
 
-import firebaseConf                from './config/firebase'
-import wheel                       from './assets/img/wheel.svg'
+import firebaseConf          from './config/firebase'
+import loading               from './assets/img/loading_2.gif'
 
 import './assets/styles/App.css'
 
 const firebaseApp = firebase.initializeApp(firebaseConf)
-const base = Rebase.createClass(firebaseApp.database());
+const base = Rebase.createClass(firebaseApp.database())
 
 class App extends Component {
-
   constructor() {
     super()
     this.state = {
-      users: {},
-      isLoading: true,
+      users: {}
     }
   }
 
   componentDidMount() {
-    base.bindToState('users', {
+    base.syncState('users', {
       context: this,
       state: 'users',
     });
-
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        this.setState({
-          isLoading: false
-        })
-      }
-      else {
-        this.setState({
-          isLoading: true
-        })
-        this.anonymousLogin()
-      }
-    })
+    firebase.auth().onAuthStateChanged(user => (!user) && this.anonymousLogin())
   }
 
   anonymousLogin = () => firebase.auth().signInAnonymously().catch((error) => alert(error.code))
 
+  incrementUserCount = (uid) => {
+    const { users } = this.state
+    this.setState({
+      users : {
+        ...users,
+        [uid]: {
+          ...users[uid],
+          count: (_.get(users[uid], 'count') || 0) + 1
+        }
+      }
+    })
+  }
+
   render() {
-    const { users, isLoading } = this.state
+    const { users } = this.state
     const firebaseSession = firebase.auth().currentUser
+
+    const currentUser = _.get(users, _.get(firebaseSession, "uid"), false)
+    const uid = _.get(firebaseSession, "uid")
 
     return (
       <main>
@@ -57,16 +58,13 @@ class App extends Component {
           <h2><span aria-label="fire" role="img">🔥</span> Firebase Meetup <span aria-label="fire" role="img">🔥</span></h2>
         </header>
 
-        {isLoading && <img alt="loading" className="loading" src={wheel} />}
+        {!currentUser && <img alt="loading" className="loading" src={loading} />}
 
-        {!isLoading && firebaseSession && <Logout firebase={firebase} />}
+        {firebaseSession && <Logout firebase={firebase} />}
 
-        {
-          !isLoading &&
-          firebaseSession &&
-          _.has(users, firebaseSession.uid) && (
-          <Welcome currentUser={_.get(users, firebaseSession.uid, null)} />
-        )}
+        {currentUser &&
+          <Welcome currentUser={currentUser} incrementUserCount={() => this.incrementUserCount(uid) }/>
+        }
 
       </main>
     )
