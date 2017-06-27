@@ -19,7 +19,8 @@ class App extends Component {
     super()
     this.state = {
       users: {},
-      stats: {}
+      stats: {},
+      currentUserCountRef : {}
     }
   }
 
@@ -35,21 +36,15 @@ class App extends Component {
     firebase.auth().onAuthStateChanged(user => (!user) && this.anonymousLogin())
   }
 
-  anonymousLogin = () => firebase.auth().signInAnonymously().catch((error) => alert(error.code))
+  anonymousLogin = () => firebase.auth().signInAnonymously().then(uid => {
+    this.setState({ currentUserCountRef: firebase.database().ref(`users/${uid}/count`)})
+  })
 
-  incrementUserCount = (uid) => {
-    const { users, stats } = this.state
+  incrementUserCount = () => {
+    const { stats, currentUserCountRef } = this.state
 
     if (_.get(stats, 'lock')) {
-      this.setState({
-        users : {
-          ...users,
-          [uid]: {
-            ...users[uid],
-            count: (_.get(users[uid], 'count') || 0) + 1
-          }
-        }
-      })
+      currentUserCountRef.transaction(currentCount => (currentCount || 0 ) + 1);
     }
   }
 
@@ -71,7 +66,7 @@ class App extends Component {
         {!currentUser && firebaseSession && <Logout firebase={firebase} />}
 
         {currentUser &&
-          <Welcome currentUser={currentUser} incrementUserCount={() => this.incrementUserCount(uid) }/>
+          <Welcome currentUser={currentUser} incrementUserCount={() => this.incrementUserCount() }/>
         }
 
       </main>
